@@ -17,13 +17,16 @@
 
 #ifndef _ADAFRUIT_PWMServoDriver_H
 #define _ADAFRUIT_PWMServoDriver_H
-
+/*
 #if ARDUINO >= 100
  #include <Arduino.h>
 #else
  #include <WProgram.h>
 #endif
 #include <Wire.h>  //Need to replace with Gumstix i2c librarya 
+*/
+
+#include "i2c.h" 
 
 #define PCA9685_SUBADR1 0x2
 #define PCA9685_SUBADR2 0x3
@@ -60,7 +63,7 @@ class Adafruit_PWMServoDriver {
  private:
   uint8_t _i2caddr;
   
-  TwoWire *_i2c;  //Need to replace with Gumstix i2c librarya 
+  //TwoWire *_i2c;  //Need to replace with Gumstix i2c librarya 
 
   uint8_t read8(uint8_t addr);
   void write8(uint8_t addr, uint8_t d);

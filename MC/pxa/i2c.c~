@@ -32,7 +32,7 @@
 
 /* FIXME: this file is PXA255 specific! What about other XScales? */
 
-//#include <common.h>
+#include <common.h>
 
 #ifdef CONFIG_HARD_I2C
 

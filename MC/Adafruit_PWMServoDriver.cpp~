@@ -16,7 +16,8 @@
  ****************************************************/
 
 #include "Adafruit_PWMServoDriver.h"
-#include <Wire.h> // Need to replace with Gumstix i2c librarya 
+//#include <Wire.h> // Need to replace with Gumstix i2c librarya 
+#include "i2c.h" 
 
 // Set to true to print some debug messages, or false to disable them.
 //#define ENABLE_DEBUG_OUTPUT
@@ -29,7 +30,11 @@
 */
 /**************************************************************************/
 Adafruit_PWMServoDriver::Adafruit_PWMServoDriver(uint8_t addr) {
-  _i2caddr = addr; // Need to replace with Gumstix i2c librarya 
+  //_i2caddr = addr; // Need to replace with Gumstix i2c librarya 
+ int speed = 400000;
+ int slaveaddr = (int) addr; 
+ i2c_init( speed, slaveaddr);
+  
 
 #if defined(ARDUINO_SAM_DUE)
   _i2c = &Wire1; //Need to replace with Gumstix i2c librarya 
