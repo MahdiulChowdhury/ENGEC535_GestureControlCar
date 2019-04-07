@@ -1,0 +1,7 @@
+order of set up commands:
+
+git config --global user.email "[valid-email]"
+
+//git clone [url] 
+//[url] from EC535_lab4 repository on github
+git clone https://github.com/zsafran/EC535_lab4.git
