@@ -1,0 +1,12 @@
+
+// How to commit and push changes to github repo
+
+git add .
+git commit -m "right commit description in quotes"
+git push
+
+
+// note:
+// git add .    adds all commits
+// git status will show modified files in working directory
+//
