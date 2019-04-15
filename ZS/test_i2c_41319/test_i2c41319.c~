@@ -40,7 +40,7 @@ void write8(int file, uint8_t reg_addr, uint8_t data);
 int main(){
 	int fd;
 	float test = 9.0/2;
-	int pwmnum = 0;
+	int pwmnum = 1;
 	printf("test = %.2f \n", test);
 	//delay(10000);
 	printf("test = %.2f \n + 1 ", test + 1);
