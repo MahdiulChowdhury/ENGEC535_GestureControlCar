@@ -40,12 +40,18 @@ void write8(int file, uint8_t reg_addr, uint8_t data);
 int main(){
 	int fd;
 	float test = 9.0/2;
-	int pwmnum = 0;
+	int pwmnum_b = 0;//backword 
+	int pwmnum_f = 1;//forward
+	int pwmnum_n = 2;//neutra 
+	
+	
 	printf("test = %.2f \n", test);
 	//delay(10000);
 	printf("test = %.2f \n + 1 ", test + 1);
 	pwmBegin(fd);
-	setPwm(fd, pwmnum, 0, 530);
+	setPwm(fd, pwmnum_b, 0, 530);
+	setPwm(fd, pwmnum_f, 0, 105);
+	setPwm(fd, pwmnum_n, 0, 305);
 }
 
 void pwmBegin(int file){
