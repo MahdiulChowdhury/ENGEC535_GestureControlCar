@@ -35,24 +35,49 @@ void setPwmFreq(int file, float freq);
 void setPwm(int file, uint8_t num, uint16_t on, uint16_t off);
 uint8_t read8(int file, uint8_t reg_addr);
 void write8(int file, uint8_t reg_addr, uint8_t data);
+void calibration(int fd) ;
 
+int pwmnum_b = 0;//backword 
+int pwmnum_f = 1;//forward
+/*int pwmnum_n = 2;//neutra */
 
 int main(){
 	int fd;
 	float test = 9.0/2;
-	int pwmnum_b = 0;//backword 
-	int pwmnum_f = 1;//forward
-	int pwmnum_n = 2;//neutra 
+	int i =264;
 	
 	
 	printf("test = %.2f \n", test);
 	//delay(10000);
 	printf("test = %.2f \n + 1 ", test + 1);
 	pwmBegin(fd);
-	setPwm(fd, pwmnum_b, 0, 530);
-	setPwm(fd, pwmnum_f, 0, 105);
-	setPwm(fd, pwmnum_n, 0, 305);
+	calibration(fd); 
+	sleep(1);
+	
+	while (1) 
+	{
+		setPwm(fd, pwmnum_b, 0, 260);
+		//sleep(1);
+		setPwm(fd, pwmnum_f, 0, i); 
+		if ( i<= 168){
+    			i = 168;
+  		}
+  		i -= 20;
+  		sleep(1);
+	}
 }
+void calibration(int fd) 
+{
+	setPwm(fd, pwmnum_b, 0, 530); //full backward 
+	sleep(1);
+	setPwm(fd, pwmnum_b, 0, 105); //full forward 
+	sleep(1);
+	setPwm(fd, pwmnum_b, 0, 305); //neutral 
+	sleep(1);
+	setPwm(fd, pwmnum_b, 0, 305); //neutral 
+}
+
+
 
 void pwmBegin(int file){
 	pwmReset();
