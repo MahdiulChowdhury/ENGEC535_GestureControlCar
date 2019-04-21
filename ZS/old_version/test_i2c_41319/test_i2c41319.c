@@ -8,6 +8,18 @@
 #include <math.h>
 #include "i2c-dev.h"
 
+
+/* watch code */
+#include <math.h>
+#include <unistd.h> //sleep
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <termios.h> // serial ports
+#define BAUDRATE 115200         
+#define DEVICEPORT "/dev/ttyACM0"
+
+
 #define PCA9685_SUBADR1 0x2 /**< i2c bus address 1 */
 #define PCA9685_SUBADR2 0x3 /**< i2c bus address 2 */
 #define PCA9685_SUBADR3 0x4 /**< i2c bus address 3 */
@@ -35,7 +47,10 @@ void setPwmFreq(int file, float freq);
 void setPwm(int file, uint8_t num, uint16_t on, uint16_t off);
 uint8_t read8(int file, uint8_t reg_addr);
 void write8(int file, uint8_t reg_addr, uint8_t data);
-void calibration(int fd) ;
+void calibration(int fd);
+void direction(int fd, int orientation);
+void movement(int fd, int speed);
+
 
 int pwmnum_b = 0;//backword 
 int pwmnum_f = 1;//forward
@@ -44,8 +59,50 @@ int pwmnum_f = 1;//forward
 int main(){
 	int fd;
 	float test = 9.0/2;
-	int i =264;
-	
+	int orientation =264;
+	int speed = 305;
+
+
+	/*watch code*/
+	char command[128];
+	char response[2560];
+	char start[3];
+	char dataRequest[7];
+	int cFlag = 0;
+	int r, c;
+	uint8_t x=0, y=0, z=0, u=0;
+	unsigned int x_int = 0, y_int=0, z_int=0;
+
+	start[0] = 0xFF;
+	start[1] = 0x07;
+	start[2] = 0x03; 
+
+	dataRequest[0] = 0xFF;
+	dataRequest[1] = 0x08;
+	dataRequest[2] = 0x07; 
+	dataRequest[3] = 0x00;
+	dataRequest[4] = 0x00; 	
+	dataRequest[5] = 0x00;
+	dataRequest[6] = 0x00;
+
+	struct termios  config;
+	int wFile;
+	wFile = open(DEVICEPORT, O_RDWR | O_NOCTTY | O_NDELAY);
+	if(wFile == -1)
+	{
+		printf( "failed to open port\n" );
+		return -1;
+	}
+
+
+	bzero(&config, sizeof(config));
+	config.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+	config.c_oflag = 0;
+	tcflush(wFile, TCIFLUSH);
+	tcsetattr(wFile,TCSANOW,&config);
+
+	write(wFile,start,sizeof(start));
+	printf("Sending Start\n");
 	
 	printf("test = %.2f \n", test);
 	//delay(10000);
@@ -56,15 +113,139 @@ int main(){
 	
 	while (1) 
 	{
-		setPwm(fd, pwmnum_b, 0, 260);
+		usleep(500000);
 		//sleep(1);
-		setPwm(fd, pwmnum_f, 0, i); 
-		if ( i<= 168){
-    			i = 168;
-  		}
-  		i -= 20;
-  		sleep(1);
+		strcpy(response,"");
+
+		//printf("Sending Req\n");
+		//data request sequence: 0xFF 0x08 0x07 0x00 0x00 0x00 0x00;
+		write(wFile,dataRequest,sizeof(dataRequest));
+		//printf("\nRequest sent!\n");
+	
+		read(wFile,response,255);		
+		u = response[3];
+		x = response[4];
+		y = response[5];
+		z = response[6];
+	
+
+		x_int = (unsigned int) x;
+		y_int = (unsigned int) y;
+		z_int = (unsigned int) z;
+
+		if(u == 1){
+			printf("RES: %u %u %u\n", x, y, z, x_int, y_int, z_int);
+			if(x >= 235 && x < 250) //lowest speed forward one 
+			{
+				speed = 280; 
+			}
+			else if(x >= 220 && x < 235) //medium speed forward two
+			{
+				//speed = 250;
+				speed = 280; 
+			}
+			else if(x >= 205 && x < 220) //medium speed forward three
+			{
+				//speed = 220; 
+				speed = 280;
+			}
+			else if(x >= 190 && x < 205) //full speed forward
+			{
+				//speed = 190;
+				speed = 280;
+			}						
+			else if(x > 10 && x <= 25) // lowest speed backward 1 
+			{
+				speed = 330;
+			}
+			else if(x > 25 && x <= 40) // medium speed backward 2
+			{
+				speed = 355;
+			}
+			else if(x > 40 && x <= 55) // medium speed backward 3
+			{
+				speed = 380;
+			}
+			else if(x > 55 && x <= 70) // full speed backward 
+			{
+				speed = 405;
+			}			
+			else // neutral
+			{
+				//speed = 190;
+				speed = 305; 
+			}
+			
+			//Turning 
+			if(y >= 235 && y < 250) //lowest degree right turn
+			{
+				orientation = 240;	
+			}
+			else if(y >= 220 && y < 235) //medium degree one right turn 
+			{
+				//speed = 250;
+				orientation = 215;	
+			}
+			else if(y >= 205 && y < 220) //medium degree two right turn 
+			{
+				//speed = 220; 
+				orientation = 190;	
+			}
+			else if (y >= 190 && y < 205)  //full degree right turn 
+			{
+				//speed = 190;
+				orientation = 170;	
+			}
+
+			// for turning left  
+			
+			else if(y >= 10 && y < 25) //lowest degree  left turn 
+			{
+				orientation = 288;	
+			}
+			else if(y >= 25 && y < 40) //medium degree one left turn 
+			{
+				//speed = 250;
+				orientation = 312;	
+			}
+			else if(y >= 40 && y < 55) //medium degree two left turn 
+			{
+				//speed = 220; 
+				orientation = 336;	
+			}
+			else if (y >= 55 && y < 70)  //full degree left turn 
+			{
+				//speed = 190;
+				orientation = 360;	
+			} 
+			
+			
+			else
+			{
+				orientation = 264;	
+			}
+			
+
+			
+		}
+		else 
+		{
+			speed = 305;
+			orientation = 264;
+		}
+		
+		
+		movement(fd,speed);
+		//sleep(1);
+		direction(fd, orientation);
+		//if ( i<= 168){
+    		//	i = 168;
+  		//}
+  		//i -= 20;
+  		//sleep(1);
 	}
+
+	close(wFile);
 }
 void calibration(int fd) 
 {
@@ -77,6 +258,17 @@ void calibration(int fd)
 	setPwm(fd, pwmnum_b, 0, 305); //neutral 
 }
 
+void movement(int fd, int speed)
+{
+	setPwm(fd, pwmnum_b, 0, speed);
+
+}
+
+void direction(int fd, int orientation) 
+{
+	setPwm(fd, pwmnum_f, 0, orientation); 
+
+}
 
 
 void pwmBegin(int file){

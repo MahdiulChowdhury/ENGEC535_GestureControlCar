@@ -108,7 +108,7 @@ plus_counter=0;
 	z_int = (unsigned int) z;
 
 	if(u == 1){
-		printf("RES: %x %x %x     RES: %u %u %u\n", x, y, z, x_int, y_int, z_int);
+		printf("RES: %u %u %u\n", x, y, z, x_int, y_int, z_int);
 			
 	}
 		
