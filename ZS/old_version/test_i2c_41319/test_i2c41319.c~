@@ -1,4 +1,4 @@
-
+ls
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +50,8 @@ void write8(int file, uint8_t reg_addr, uint8_t data);
 void calibration(int fd);
 void direction(int fd, int orientation);
 void movement(int fd, int speed);
+int set_speed(int x);
+int set_orientation(int y);
 
 
 int pwmnum_b = 0;//backword 
@@ -133,116 +135,20 @@ int main(){
 		y_int = (unsigned int) y;
 		z_int = (unsigned int) z;
 
-		if(u == 1){
-			printf("RES: %u %u %u\n", x, y, z, x_int, y_int, z_int);
-			if(x >= 235 && x < 250) //lowest speed forward one 
-			{
-				speed = 280; 
-			}
-			else if(x >= 220 && x < 235) //medium speed forward two
-			{
-				//speed = 250;
-				speed = 280; 
-			}
-			else if(x >= 205 && x < 220) //medium speed forward three
-			{
-				//speed = 220; 
-				speed = 280;
-			}
-			else if(x >= 190 && x < 205) //full speed forward
-			{
-				//speed = 190;
-				speed = 280;
-			}						
-			else if(x > 10 && x <= 25) // lowest speed backward 1 
-			{
-				speed = 330;
-			}
-			else if(x > 25 && x <= 40) // medium speed backward 2
-			{
-				speed = 355;
-			}
-			else if(x > 40 && x <= 55) // medium speed backward 3
-			{
-				speed = 380;
-			}
-			else if(x > 55 && x <= 70) // full speed backward 
-			{
-				speed = 405;
-			}			
-			else // neutral
-			{
-				//speed = 190;
-				speed = 305; 
-			}
-			
-			//Turning 
-			if(y >= 235 && y < 250) //lowest degree right turn
-			{
-				orientation = 240;	
-			}
-			else if(y >= 220 && y < 235) //medium degree one right turn 
-			{
-				//speed = 250;
-				orientation = 215;	
-			}
-			else if(y >= 205 && y < 220) //medium degree two right turn 
-			{
-				//speed = 220; 
-				orientation = 190;	
-			}
-			else if (y >= 190 && y < 205)  //full degree right turn 
-			{
-				//speed = 190;
-				orientation = 170;	
-			}
-
-			// for turning left  
-			
-			else if(y >= 10 && y < 25) //lowest degree  left turn 
-			{
-				orientation = 288;	
-			}
-			else if(y >= 25 && y < 40) //medium degree one left turn 
-			{
-				//speed = 250;
-				orientation = 312;	
-			}
-			else if(y >= 40 && y < 55) //medium degree two left turn 
-			{
-				//speed = 220; 
-				orientation = 336;	
-			}
-			else if (y >= 55 && y < 70)  //full degree left turn 
-			{
-				//speed = 190;
-				orientation = 360;	
-			} 
-			
-			
-			else
-			{
-				orientation = 264;	
-			}
-			
-
-			
+		if(u == 1)
+		{
+			printf("RES: %u %u %u\n", x, y, z);			
+			speed = set_speed(x);
+			orientation = set_orientation(y);
 		}
 		else 
 		{
 			speed = 305;
 			orientation = 264;
 		}
-		
-		
 		movement(fd,speed);
-		//sleep(1);
 		direction(fd, orientation);
-		//if ( i<= 168){
-    		//	i = 168;
-  		//}
-  		//i -= 20;
-  		//sleep(1);
+	
 	}
 
 	close(wFile);
@@ -270,6 +176,93 @@ void direction(int fd, int orientation)
 
 }
 
+
+int set_speed(int x)
+{
+	int speed;
+	if(x >= 235 && x < 250) //lowest speed forward one 
+	{
+		speed = 280; 
+	}
+	else if(x >= 220 && x < 235) //medium speed forward two
+	{
+		speed = 250; 
+	}
+	else if(x >= 205 && x < 220) //medium speed forward three
+	{
+		speed = 220; 
+	}
+	else if(x >= 190 && x < 205) //full speed forward
+	{
+		speed = 190;
+	}						
+	else if(x > 10 && x <= 25) // lowest speed backward 1 
+	{
+		speed = 330;
+	}
+	else if(x > 25 && x <= 40) // medium speed backward 2
+	{
+		speed = 355;
+	}
+	else if(x > 40 && x <= 55) // medium speed backward 3
+	{
+		speed = 380;
+	}
+	else if(x > 55 && x <= 70) // full speed backward 
+	{
+		speed = 405;
+	}			
+	else // neutral
+	{
+		speed = 305; 
+	}
+	return speed;
+}
+
+int set_orientation(int y)
+{
+	int orientation;
+	if(y >= 235 && y < 250) //lowest degree right turn
+	{
+		orientation = 240;	
+	}
+	else if(y >= 220 && y < 235) //medium degree one right turn 
+	{
+		orientation = 215;	
+	}
+	else if(y >= 205 && y < 220) //medium degree two right turn 
+	{
+		orientation = 190;	
+	}
+	else if (y >= 190 && y < 205)  //full degree right turn 
+	{
+		orientation = 170;	
+	}
+
+	// for turning left  
+	
+	else if(y >= 10 && y < 25) //lowest degree  left turn 
+	{
+		orientation = 288;	
+	}
+	else if(y >= 25 && y < 40) //medium degree one left turn 
+	{
+		orientation = 325;	
+	}
+	else if(y >= 40 && y < 55) //medium degree two left turn 
+	{
+		orientation = 360;	
+	}
+	else if (y >= 55 && y < 70)  //full degree left turn 
+	{
+		orientation = 410;	
+	} 
+	else //straight
+	{
+		orientation = 264;	
+	}
+	return orientation;
+}
 
 void pwmBegin(int file){
 	pwmReset();
