@@ -1,11 +1,16 @@
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <fcntl.h> // for O_RDWR
 #include <time.h>
+#include "i2c-dev.h"
 
 
 /*=========================================================================
     I2C ADDRESS/BITS
     -----------------------------------------------------------------------*/
-    #define ADS1015_ADDRESS                 (0x48)    // 1001 000 (ADDR = GND)
+    #define ADS1115_ADDRESS                 (0x48)    // 1001 000 (ADDR = GND)
 /*=========================================================================*/
 
 /*=========================================================================
@@ -86,14 +91,29 @@
 
 /* function prototypes */
 void delay(int milliseconds);
+static void writeRegister(int file, uint8_t i2cAddress, uint8_t reg, uint16_t value);
+static uint16_t readRegister(int file, uint8_t i2cAddress, uint8_t reg);
+uint16_t readADC_SingleEnded(int file, uint8_t channel);
 
 
-uint8_t m_i2cAddress = ADS1015_ADDRESS;
+uint8_t m_i2cAddress = ADS1115_ADDRESS;
 uint8_t m_conversionDelay = ADS1115_CONVERSIONDELAY;
 uint8_t m_bitShift = 0;
 // m_gain = GAIN_TWOTHIRDS; /* +/- 6.144V range (limited to VDD +0.3V max!) */
 
+int main(){
+	int fd;
+	int16_t adc0;
+	printf("i2c start\n");
+	while(1){
+		adc0 = readADC_SingleEnded(fd,0);
+		printf("adc0 = %d\n", (int)adc0);
+		delay(100);
+ 
+	}
+}
 
+/* function definitions */
 void delay(int milliseconds)
 {
     long pause;
@@ -110,12 +130,12 @@ void delay(int milliseconds)
     @brief  Writes 16-bits to the specified destination register
 */
 /**************************************************************************/
-static void writeRegister(uint8_t i2cAddress, uint8_t reg, uint16_t value) {
-  Wire.beginTransmission(i2cAddress);
-  i2cwrite((uint8_t)reg);
-  i2cwrite((uint8_t)(value>>8));
-  i2cwrite((uint8_t)(value & 0xFF));
-  Wire.endTransmission();
+static void writeRegister(int file, uint8_t i2cAddress, uint8_t reg, uint16_t value) {
+	/*Wire.beginTransmission(i2cAddress);
+	  i2cwrite((uint8_t)reg);
+	  i2cwrite((uint8_t)(value>>8));
+	  i2cwrite((uint8_t)(value & 0xFF));
+	  Wire.endTransmission();*/	 
 
 	file = open("/dev/i2c-0", O_RDWR);
 
@@ -124,7 +144,17 @@ static void writeRegister(uint8_t i2cAddress, uint8_t reg, uint16_t value) {
 		fprintf( stderr, "Failed to set slave address: %m\n" );
 	}
 	
-	i2c_smbus_write_byte_data(file, reg, data);
+	i2c_smbus_write_byte_data(file, reg, (uint8_t)(value>>8));
+	close(file);
+	
+	file = open("/dev/i2c-0", O_RDWR);
+
+	if( ioctl(file, I2C_SLAVE, ADS1115_ADDRESS ) < 0)
+	{
+		fprintf( stderr, "Failed to set slave address: %m\n" );
+	}
+	
+	i2c_smbus_write_byte_data(file, reg, (uint8_t)(value & 0xFF));
 	close(file);
 
 }
@@ -134,12 +164,32 @@ static void writeRegister(uint8_t i2cAddress, uint8_t reg, uint16_t value) {
     @brief  Writes 16-bits to the specified destination register
 */
 /**************************************************************************/
-static uint16_t readRegister(uint8_t i2cAddress, uint8_t reg) {
-  Wire.beginTransmission(i2cAddress);
-  i2cwrite(ADS1015_REG_POINTER_CONVERT);
-  Wire.endTransmission();
-  Wire.requestFrom(i2cAddress, (uint8_t)2);
-  return ((i2cread() << 8) | i2cread());  
+static uint16_t readRegister(int file, uint8_t i2cAddress, uint8_t reg) {
+	 /* Wire.beginTransmission(i2cAddress);
+	    i2cwrite(ADS1015_REG_POINTER_CONVERT);
+	    Wire.endTransmission();
+	    Wire.requestFrom(i2cAddress, (uint8_t)2);
+	    return ((i2cread() << 8) | i2cread()); */
+	  
+	file = open("/dev/i2c-0", O_RDWR);
+
+	if( ioctl(file, I2C_SLAVE, ADS1115_ADDRESS ) < 0)
+	{
+		fprintf( stderr, "Failed to set slave address: %m\n" );
+	}
+	
+	i2c_smbus_write_byte_data(file, reg, ADS1015_REG_POINTER_CONVERT);
+	close(file);
+	
+	file = open("/dev/i2c-0", O_RDWR);
+
+	if( ioctl(file, I2C_SLAVE, ADS1115_ADDRESS ) < 0)
+	{
+		fprintf( stderr, "Failed to set slave address: %m\n" );
+	}
+
+	return ((((uint8_t)i2c_smbus_read_byte_data(file)) << 8) | ((uint8_t)i2c_smbus_read_byte_data(file)));
+
 }
 
 
@@ -148,7 +198,7 @@ static uint16_t readRegister(uint8_t i2cAddress, uint8_t reg) {
     @brief  Gets a single-ended ADC reading from the specified channel
 */
 /**************************************************************************/
-uint16_t readADC_SingleEnded(uint8_t channel) {
+uint16_t readADC_SingleEnded(int file, uint8_t channel) {
   if (channel > 3)
   {
     return 0;
@@ -186,13 +236,13 @@ uint16_t readADC_SingleEnded(uint8_t channel) {
   config |= ADS1015_REG_CONFIG_OS_SINGLE;
 
   // Write config register to the ADC
-  writeRegister(m_i2cAddress, ADS1015_REG_POINTER_CONFIG, config);
+  writeRegister(file, m_i2cAddress, ADS1015_REG_POINTER_CONFIG, config);
 
   // Wait for the conversion to complete
   delay(m_conversionDelay);
 
   // Read the conversion results
   // Shift 12-bit results right 4 bits for the ADS1015
-  return readRegister(m_i2cAddress, ADS1015_REG_POINTER_CONVERT) >> m_bitShift;  
+  return readRegister(file, m_i2cAddress, ADS1015_REG_POINTER_CONVERT) >> m_bitShift;  
 }
 
