@@ -105,16 +105,14 @@ uint16_t adc0;
 
 int main(){
 	int fd;
-	int i = 0;
 	printf("i2c start\n");
 	while(1){
 		//adc0 = readADC_SingleEnded(fd,0);
-		readADC_SingleEnded(fd,1);
+		readADC_SingleEnded(fd,0);
 		printf("done read\n");
 		//close(fd);
 		printf("i2c done\n");
-		printf("%d adc0 = %u\n", i, (unsigned int)adc0);
-		i++;
+		printf("adc0 = %u\n", (unsigned int)adc0);
 		delay(1000);
 	}
 }
