@@ -23,14 +23,12 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 static int mymodule_open(struct inode *inode, struct file *filp);
 static int mymodule_release(struct inode *inode, struct file *filp);
-static ssize_t mymodule_read(struct file *filp,
-		char *buf, size_t count, loff_t *f_pos);
 static void mymodule_exit(void);
 static int mymodule_init(void);
 irqreturn_t gpio_irq(int irq, void *dev_id, struct pt_regs *regs);
+static int proc_read( char *page, char **start, off_t off, int count, int *eof, void *data);
 
 struct file_operations mymodule_fops = {
-	read: mymodule_read,
 	open: mymodule_open,
 	release: mymodule_release
 };
@@ -41,6 +39,7 @@ module_exit(mymodule_exit);
 int irq0 = 0;
 int stop = 0;
 int mymodule_len_read = 2;
+static struct proc_dir_entry *proc_entry;
 
 static int mymodule_init(void)
 {
@@ -54,6 +53,14 @@ static int mymodule_init(void)
 	  result = -1;
 	  goto fail; 
 	}
+	proc_entry = create_proc_entry( "mymodule", 0644, NULL );
+
+	if (proc_entry == NULL) {
+      		printk(KERN_INFO "mymodule: Couldn't create proc entry\n");
+		result = -ENOMEM;
+		goto fail; 
+	}
+	proc_entry->read_proc = proc_read;
 
 	printk(KERN_ALERT "Inserting mymodule module\n"); 
 	return 0;
@@ -66,6 +73,7 @@ fail:
 static void mymodule_exit(void)
 {
 	free_irq(irq0, NULL);
+	remove_proc_entry("mytimer", &proc_root);
 	printk(KERN_ALERT "Removing mymodule module\n");
 }
 
@@ -85,38 +93,18 @@ static int mymodule_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-static ssize_t mymodule_read(struct file *filp, char *buf, 
-							size_t count, loff_t *f_pos)
-{ 
-	char tbuf[256], *tbptr = tbuf;
-	memset(tbuf, 0, 256);
+static int proc_read(char *page, char **start, off_t off, int count, int *eof, void *data)
+{
+	int len;
+	if (off > 0) {
+    		*eof = 1;
+    		return 0;
+  	}
+	len = sprintf(page, "%d\n", stop);
 	
-
-	/* end of buffer reached */
-	if (*f_pos >= mymodule_len_read)
-	{
-		return 0;
-	}
-
-	/* do not go over then end */
-	if (count > mymodule_len_read - *f_pos)
-		count = mymodule_len_read - *f_pos;
 	
-
-	count = sprintf(tbptr,"%d\n", stop);
-
-	//printk(KERN_INFO "count = %d\n", count);
-
-	/* Transfering data to user space */ 
-	if (copy_to_user(buf, tbptr + *f_pos, count))
-	{
-		return -EFAULT;
-	}
-
-	/* Changing reading position as best suits */ 
-	*f_pos += count; 
-	return count; 
-}
+	return len;
+} 
 
 
 
