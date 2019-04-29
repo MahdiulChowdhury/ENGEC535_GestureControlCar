@@ -203,7 +203,8 @@ void readRegister(int file, uint8_t i2cAddress, uint8_t reg) {
 	//i2c_smbus_write_quick(file, (uint8_t)reg);
 	//return ((((uint8_t)i2c_smbus_read_byte(file)) << 8) | ((uint8_t)i2c_smbus_read_byte(file)));
 	printf("start read\n");
-	adc0 = i2c_smbus_read_word_data(file, reg);
+	i2c_smbus_write_word_data(file, reg, 0);
+	adc0 = i2c_smbus_read_word_data(file, reg) >> 4;
 	close(file);
 	/*close(file);
 	
