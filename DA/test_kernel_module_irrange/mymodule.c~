@@ -23,8 +23,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 static int mymodule_open(struct inode *inode, struct file *filp);
 static int mymodule_release(struct inode *inode, struct file *filp);
-static ssize_t mymodule_read(struct file *filp,
-		char *buf, size_t count, loff_t *f_pos);
+static ssize_t mymodule_read(struct file *filp, char *buf, size_t count, loff_t *f_pos);
 static void mymodule_exit(void);
 static int mymodule_init(void);
 irqreturn_t gpio_irq(int irq, void *dev_id, struct pt_regs *regs);
@@ -32,7 +31,8 @@ static int proc_read( char *page, char **start, off_t off, int count, int *eof, 
 
 struct file_operations mymodule_fops = {
 	open: mymodule_open,
-	release: mymodule_release
+	release: mymodule_release,
+	read: mymodule_read
 };
 
 module_init(mymodule_init);
@@ -47,6 +47,15 @@ static int mymodule_init(void)
 {
 	int result;
 	int gpio = 101;
+
+
+	result = register_chrdev(61, "mymodule", &mymodule_fops);
+	if (result < 0)
+	{
+		printk(KERN_ALERT
+			"mymodule: cannot obtain major number %d\n", 61);
+		return result;
+	}
 
 	pxa_gpio_mode(gpio);
 	irq0 = IRQ_GPIO(gpio);
@@ -76,6 +85,7 @@ static void mymodule_exit(void)
 {
 	free_irq(irq0, NULL);
 	remove_proc_entry("mytimer", &proc_root);
+	unregister_chrdev(61, "mymodule");
 	printk(KERN_ALERT "Removing mymodule module\n");
 }
 
@@ -94,6 +104,40 @@ static int mymodule_release(struct inode *inode, struct file *filp)
 	/* Success */
 	return 0;
 }
+
+
+static ssize_t mymodule_read(struct file *filp, char *buf, 
+							size_t count, loff_t *f_pos)
+{ 
+  char tbuf[256], *tbptr = tbuf;
+	memset(tbuf, 0, 256);
+	
+
+	/* end of buffer reached */
+	if (*f_pos >= 10)
+	{
+		return 0;
+	}
+
+	/* do not go over then end */
+	if (count > 10 - *f_pos)
+		count = 10 - *f_pos;
+
+
+
+	  count = sprintf(tbptr,"%d\n", stop);
+
+	/* Transfering data to user space */ 
+	if (copy_to_user(buf, tbptr + *f_pos, count))
+	{
+		return -EFAULT;
+	}
+
+	/* Changing reading position as best suits */ 
+	*f_pos += count; 
+	return count; 
+}
+
 
 static int proc_read(char *page, char **start, off_t off, int count, int *eof, void *data)
 {
@@ -124,7 +168,7 @@ irqreturn_t gpio_irq(int irq, void *dev_id, struct pt_regs *regs)
 		}
 	}
 
-	printk(KERN_INFO "stop = %d\n", stop);
+	//printk(KERN_INFO "stop = %d\n", stop);
 	return IRQ_HANDLED;
 
 }
