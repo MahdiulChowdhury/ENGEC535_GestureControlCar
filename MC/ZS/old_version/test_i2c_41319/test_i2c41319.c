@@ -50,7 +50,7 @@ void write8(int file, uint8_t reg_addr, uint8_t data);
 void calibration(int fd);
 void direction(int fd, int orientation);
 void movement(int fd, int speed);
-int set_speed(int x);
+int set_speed(int x, int front_object);
 int set_orientation(int y);
 
 
@@ -146,10 +146,10 @@ int main(){
 	      	printf("%s", line);
 	    	
 
-		if(u == 1 && (atoi(line) == 0))
+		if(u == 1)
 		{
 			printf("RES: %u %u %u\n", x, y, z);			
-			speed = set_speed(x);
+			speed = set_speed(x, atoi(line));
 			orientation = set_orientation(y);
 		}
 		else 
@@ -190,33 +190,33 @@ void direction(int fd, int orientation)
 }
 
 
-int set_speed(int x)
+int set_speed(int x, int front_object)
 {
 	int speed;
-	if(x >= 235 && x < 250) //lowest speed forward one 
+	if(x >= 235 && x < 250 && front_object == 0) //lowest speed forward one 
 	{
 		//speed = 280; 
 		speed = 285;
 		
 	}
-	else if(x >= 220 && x < 235) //medium speed forward two
+	else if(x >= 220 && x < 235 && front_object == 0) //medium speed forward two
 	{
 		//speed = 250; 
 		//speed = 280; 
-		speed = 285;
+		speed = 280;
 	}
-	else if(x >= 205 && x < 220) //medium speed forward three
+	else if(x >= 205 && x < 220 && front_object == 0) //medium speed forward three
 	{
 		//speed = 220; 
 		//speed = 280; 
-		speed = 285;
+		speed = 275;
 	}
-	else if(x >= 190 && x < 205) //full speed forward
+	else if(x >= 190 && x < 205 && front_object == 0) //full speed forward
 	{
 		//speed = 190;
 		//speed = 220;
 		 //speed = 280;
-		speed = 280 ;
+		speed = 270 ;
 	}
 
 
