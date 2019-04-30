@@ -193,7 +193,7 @@ void direction(int fd, int orientation)
 int set_speed(int x, int front_object)
 {
 	int speed;
-	if(x >= 235 && x < 250 && front_object == 0) //lowest speed forward one 
+	if(x >= 235 && x < 245 && front_object == 0) //lowest speed forward one 
 	{
 		//speed = 280; 
 		speed = 285;
@@ -221,26 +221,26 @@ int set_speed(int x, int front_object)
 
 
 						
-	else if(x > 10 && x <= 25) // lowest speed backward 1 
+	else if(x > 15 && x <= 25) // lowest speed backward 1 
 	{
 		speed = 330;//330 the slowest 
 	}
 	else if(x > 25 && x <= 40) // medium speed backward 2
 	{
 		//speed = 355;
-		speed = 330;
+		speed = 335;
 	}
 	else if(x > 40 && x <= 55) // medium speed backward 3
 	{
 		//speed = 380;
 		//speed = 355;
-		speed = 330;
+		speed = 340;
 	}
 	else if(x > 55 && x <= 70) // full speed backward 
 	{
 		//speed = 405;
 		//speed = 355;
-		speed = 330;
+		speed = 345;
 	}			
 	else // neutral
 	{

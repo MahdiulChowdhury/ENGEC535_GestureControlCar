@@ -27,7 +27,7 @@ static ssize_t mymodule_read(struct file *filp, char *buf, size_t count, loff_t 
 static void mymodule_exit(void);
 static int mymodule_init(void);
 irqreturn_t gpio_irq(int irq, void *dev_id, struct pt_regs *regs);
-static int proc_read( char *page, char **start, off_t off, int count, int *eof, void *data);
+
 
 struct file_operations mymodule_fops = {
 	open: mymodule_open,
@@ -41,7 +41,6 @@ module_exit(mymodule_exit);
 int irq0 = 0;
 int stop = 0;
 int mymodule_len_read = 2;
-static struct proc_dir_entry *proc_entry;
 
 static int mymodule_init(void)
 {
@@ -64,14 +63,6 @@ static int mymodule_init(void)
 	  result = -1;
 	  goto fail; 
 	}
-	proc_entry = create_proc_entry( "mymodule", 0644, NULL );
-
-	if (proc_entry == NULL) {
-      		printk(KERN_INFO "mymodule: Couldn't create proc entry\n");
-		result = -ENOMEM;
-		goto fail; 
-	}
-	proc_entry->read_proc = proc_read;
 
 	printk(KERN_ALERT "Inserting mymodule module\n"); 
 	return 0;
@@ -84,7 +75,6 @@ fail:
 static void mymodule_exit(void)
 {
 	free_irq(irq0, NULL);
-	remove_proc_entry("mytimer", &proc_root);
 	unregister_chrdev(61, "mymodule");
 	printk(KERN_ALERT "Removing mymodule module\n");
 }
@@ -137,20 +127,6 @@ static ssize_t mymodule_read(struct file *filp, char *buf,
 	*f_pos += count; 
 	return count; 
 }
-
-
-static int proc_read(char *page, char **start, off_t off, int count, int *eof, void *data)
-{
-	int len;
-	if (off > 0) {
-    		*eof = 1;
-    		return 0;
-  	}
-	len = sprintf(page, "%d\n", stop);
-	
-	
-	return len;
-} 
 
 
 
