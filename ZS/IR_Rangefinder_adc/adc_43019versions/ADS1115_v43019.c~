@@ -94,7 +94,7 @@ void delay(int milliseconds);
 static void writeRegister(int file, uint8_t i2cAddress, uint8_t reg, uint16_t value);
 //static uint16_t readRegister(int file, uint8_t i2cAddress, uint8_t reg);
 //uint16_t readADC_SingleEnded(int file, uint8_t channel);
-void readRegister(int file, uint8_t i2cAddress, uint8_t reg, );
+void readRegister(int file, uint8_t i2cAddress, uint8_t reg);
 void readADC_SingleEnded(int file, uint8_t channel);
 
 uint8_t m_i2cAddress = ADS1115_ADDRESS;

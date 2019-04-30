@@ -2,8 +2,8 @@ CC=$(EC535)/arm-linux/bin/arm-linux-gcc -static
 PROGS = ADS1115_v43019 
 #LDFLAGS = -lm
 
-$(PROGS): ADS1115_v43019.o
-	$(CC) ADS1115_v43019.o -o $(PROGS)
+$(PROGS): ADS1115.o
+	$(CC) ADS1115.o -o $(PROGS)
 
 all: $(PROGS)
 

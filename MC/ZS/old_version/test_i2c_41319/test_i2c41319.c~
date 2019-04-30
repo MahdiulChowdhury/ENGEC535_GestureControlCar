@@ -321,7 +321,7 @@ uint8_t read8(int file, uint8_t reg_addr) {
 
 	file = open("/dev/i2c-0", O_RDWR);
 
-	if( ioctl(file, I2C_SLAVE, ADDRESS ) < 0)
+	if( ioctl(file, I2C_SLAVE_FORCE, ADDRESS ) < 0)
 	{
 		fprintf( stderr, "Failed to set slave address: %m\n" );
 	}
