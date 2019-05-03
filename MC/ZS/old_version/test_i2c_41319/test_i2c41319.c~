@@ -209,14 +209,14 @@ int set_speed(int x, int front_object)
 	{
 		//speed = 220; 
 		//speed = 280; 
-		speed = 275;
+		speed = 270;
 	}
 	else if(x >= 190 && x < 205 && front_object == 0) //full speed forward
 	{
 		//speed = 190;
 		//speed = 220;
 		 //speed = 280;
-		speed = 270 ;
+		speed = 260;
 	}
 
 
@@ -240,7 +240,7 @@ int set_speed(int x, int front_object)
 	{
 		//speed = 405;
 		//speed = 355;
-		speed = 345;
+		speed = 350;
 	}			
 	else // neutral
 	{
